@@ -75,7 +75,7 @@ def desenhar_arvore():
     nx.draw(G, pos, with_labels=True, node_size=2000, node_color='lightblue', font_size=10, font_weight='bold')
     plt.show()
 
-# Interface gráfica
+# aq começa a interface
 raiz = None
 janela = tk.Tk()
 janela.title("arvore binaria")
