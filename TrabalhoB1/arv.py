@@ -14,16 +14,22 @@ class Arvore:
         self.raiz = None
     
     def inserir(self, chave):
-        self.raiz = self._inserir(self.raiz, chave)
+        if self.raiz is None:
+            self.raiz = No(chave)
+        else:
+            self._inserir(self.raiz, chave)
     
     def _inserir(self, raiz, chave):
-        if raiz is None:
-            return No(chave)
         if chave < raiz.chave:
-            raiz.esquerda = self._inserir(raiz.esquerda, chave)
+            if raiz.esquerda is None:
+                raiz.esquerda = No(chave)
+            else:
+                self._inserir(raiz.esquerda, chave)
         else:
-            raiz.direita = self._inserir(raiz.direita, chave)
-        return raiz
+            if raiz.direita is None:
+                raiz.direita = No(chave)
+            else:
+                self._inserir(raiz.direita, chave)
     
     def excluir(self, chave):
         self.raiz = self._excluir(self.raiz, chave)
@@ -239,7 +245,7 @@ class Interface:
                     G.add_edge(raiz.chave, filho.chave)
                     self.adicionar_arestas(filho, G, pos, x + (i - len(raiz.filhos) / 2) / layer, y - 1, layer + 1)
     
-    def desenhar_arvore(self):
+    def desenhar_arvore(self, no_destacado=None):
         plt.close('all')
         G = nx.DiGraph()
         if self.tipo_arvore.get() == "binaria":
@@ -248,8 +254,12 @@ class Interface:
             self.adicionar_arestas(self.arvore_generica.raiz, G, {})
         pos = nx.get_node_attributes(G, 'pos')
         plt.figure(figsize=(8, 5))
-        nx.draw(G, pos, with_labels=True, node_size=2000, node_color='lightblue', font_size=10, font_weight='bold')
+        node_colors = ['lightblue' if node != no_destacado else 'red' for node in G.nodes()]
+        nx.draw(G, pos, with_labels=True, node_size=2000, node_color=node_colors, font_size=10, font_weight='bold')
         plt.show()
+    
+    def desenhar_arvore_destacado(self, chave):
+        self.desenhar_arvore(no_destacado=chave)
 
 if __name__ == "__main__":
     root = tk.Tk()
