@@ -9,7 +9,7 @@ class No:
         self.esquerda = None
         self.direita = None
 
-class ArvoreBinaria:
+class Arvore:
     def __init__(self):
         self.raiz = None
     
@@ -76,12 +76,80 @@ class ArvoreBinaria:
         if raiz is None or (raiz.esquerda is None and raiz.direita is None):
             return 0
         return 1 + self._contar_nao_folhas(raiz.esquerda) + self._contar_nao_folhas(raiz.direita)
+
+class NoGenerico:
+    def __init__(self, chave):
+        self.chave = chave
+        self.filhos = []
+
+class ArvoreGenerica:
+    def __init__(self):
+        self.raiz = None
+
+    def inserir(self, chave, chave_pai=None):
+        novo_no = NoGenerico(chave)
+        
+        if self.raiz is None:
+            self.raiz = novo_no
+            return
+        
+        if chave_pai is None:
+            messagebox.showerror("Erro", "A árvore já tem uma raiz. Especifique um nó pai.")
+            return
+        
+        pai = self.buscar(self.raiz, chave_pai)
+        if pai:
+            pai.filhos.append(novo_no)
+        else:
+            messagebox.showerror("Erro", "Nó pai não encontrado.")
     
+    def buscar(self, raiz, chave):
+        if raiz is None:
+            return None
+        if raiz.chave == chave:
+            return raiz
+        for filho in raiz.filhos:
+            encontrado = self.buscar(filho, chave)
+            if encontrado:
+                return encontrado
+        return None
+
+    def contar_nos(self):
+        return self._contar_nos(self.raiz)
+    
+    def _contar_nos(self, raiz):
+        if raiz is None:
+            return 0
+        total = 1
+        for filho in raiz.filhos:
+            total += self._contar_nos(filho)
+        return total
+    
+    def contar_nao_folhas(self):
+        return self._contar_nao_folhas(self.raiz)
+    
+    def _contar_nao_folhas(self, raiz):
+        if raiz is None or len(raiz.filhos) == 0:
+            return 0
+        total = 1
+        for filho in raiz.filhos:
+            total += self._contar_nao_folhas(filho)
+        return total
+
 class Interface:
     def __init__(self, root):
-        self.arvore = ArvoreBinaria()
+        self.arvore_binaria = Arvore()
+        self.arvore_generica = ArvoreGenerica()
         self.root = root
-        self.root.title("Árvore Binária")
+        self.root.title("Árvore")
+        
+        self.tipo_arvore = tk.StringVar(value="binaria")
+        
+        self.radio_binaria = tk.Radiobutton(root, text="Árvore Binária", variable=self.tipo_arvore, value="binaria")
+        self.radio_binaria.pack()
+        
+        self.radio_generica = tk.Radiobutton(root, text="Árvore Genérica", variable=self.tipo_arvore, value="generica")
+        self.radio_generica.pack()
         
         self.entrada = tk.Entry(root)
         self.entrada.pack()
@@ -99,25 +167,40 @@ class Interface:
         self.contagem_label.pack()
     
     def atualizar_contagem(self):
-        total_nos = self.arvore.contar_nos()
-        total_nao_folhas = self.arvore.contar_nao_folhas()
+        if self.tipo_arvore.get() == "binaria":
+            total_nos = self.arvore_binaria.contar_nos()
+            total_nao_folhas = self.arvore_binaria.contar_nao_folhas()
+        else:
+            total_nos = self.arvore_generica.contar_nos()
+            total_nao_folhas = self.arvore_generica.contar_nao_folhas()
         self.contagem_label.config(text=f"Nós: {total_nos} | Não-folhas: {total_nao_folhas}")
     
     def adicionar_valor(self):
         try:
-            valor = int(self.entrada.get())
-            if self.arvore.buscar(valor) is not None:
-                raise ValueError
-            self.arvore.inserir(valor)
+            if self.tipo_arvore.get() == "binaria":
+                valor = int(self.entrada.get())
+                if self.arvore_binaria.buscar(valor) is not None:
+                    raise ValueError
+                self.arvore_binaria.inserir(valor)
+            else:
+                valores = self.entrada.get().split(',')
+                valor = int(valores[0])
+                chave_pai = int(valores[1]) if len(valores) > 1 else None
+                if chave_pai is not None and self.arvore_generica.buscar(self.arvore_generica.raiz, chave_pai) is None:
+                    raise ValueError
+                self.arvore_generica.inserir(valor, chave_pai)
             self.atualizar_contagem()
             self.desenhar_arvore()
         except ValueError:
-            messagebox.showerror("Erro", "Insira um valor válido")
+            messagebox.showerror("Erro", "Insira um valor válido no formato correto")
     
     def remover_valor(self):
         try:
             valor = int(self.entrada.get())
-            self.arvore.excluir(valor)
+            if self.tipo_arvore.get() == "binaria":
+                self.arvore_binaria.excluir(valor)
+            else:
+                messagebox.showerror("Erro", "Remoção não suportada para árvore genérica")
             self.atualizar_contagem()
             self.desenhar_arvore()
         except ValueError:
@@ -126,28 +209,43 @@ class Interface:
     def localizar_valor(self):
         try:
             valor = int(self.entrada.get())
-            no_encontrado = self.arvore.buscar(valor)
-            if no_encontrado:
-                self.desenhar_arvore_destacado(no_encontrado.chave)
+            if self.tipo_arvore.get() == "binaria":
+                no_encontrado = self.arvore_binaria.buscar(valor)
+                if no_encontrado:
+                    self.desenhar_arvore_destacado(no_encontrado.chave)
+                else:
+                    messagebox.showinfo("Resultado da pesquisa", "Valor não encontrado na árvore.")
             else:
-                messagebox.showinfo("Resultado da pesquisa", "Valor não encontrado na árvore.")
+                no_encontrado = self.arvore_generica.buscar(self.arvore_generica.raiz, valor)
+                if no_encontrado:
+                    messagebox.showinfo("Resultado da pesquisa", "Valor encontrado na árvore.")
+                else:
+                    messagebox.showinfo("Resultado da pesquisa", "Valor não encontrado na árvore.")
         except ValueError:
             messagebox.showerror("Erro", "Digite um número")
     
     def adicionar_arestas(self, raiz, G, pos, x=0, y=0, layer=1):
         if raiz is not None:
             G.add_node(raiz.chave, pos=(x, y))
-            if raiz.esquerda is not None:
-                G.add_edge(raiz.chave, raiz.esquerda.chave)
-                self.adicionar_arestas(raiz.esquerda, G, pos, x - 1 / layer, y - 1, layer + 1)
-            if raiz.direita is not None:
-                G.add_edge(raiz.chave, raiz.direita.chave)
-                self.adicionar_arestas(raiz.direita, G, pos, x + 1 / layer, y - 1, layer + 1)
+            if isinstance(raiz, No):
+                if raiz.esquerda is not None:
+                    G.add_edge(raiz.chave, raiz.esquerda.chave)
+                    self.adicionar_arestas(raiz.esquerda, G, pos, x - 1 / layer, y - 1, layer + 1)
+                if raiz.direita is not None:
+                    G.add_edge(raiz.chave, raiz.direita.chave)
+                    self.adicionar_arestas(raiz.direita, G, pos, x + 1 / layer, y - 1, layer + 1)
+            elif isinstance(raiz, NoGenerico):
+                for i, filho in enumerate(raiz.filhos):
+                    G.add_edge(raiz.chave, filho.chave)
+                    self.adicionar_arestas(filho, G, pos, x + (i - len(raiz.filhos) / 2) / layer, y - 1, layer + 1)
     
     def desenhar_arvore(self):
         plt.close('all')
         G = nx.DiGraph()
-        self.adicionar_arestas(self.arvore.raiz, G, {})
+        if self.tipo_arvore.get() == "binaria":
+            self.adicionar_arestas(self.arvore_binaria.raiz, G, {})
+        else:
+            self.adicionar_arestas(self.arvore_generica.raiz, G, {})
         pos = nx.get_node_attributes(G, 'pos')
         plt.figure(figsize=(8, 5))
         nx.draw(G, pos, with_labels=True, node_size=2000, node_color='lightblue', font_size=10, font_weight='bold')
