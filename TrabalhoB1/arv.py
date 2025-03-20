@@ -82,7 +82,7 @@ class Arvore:
         if raiz is None or (raiz.esquerda is None and raiz.direita is None):
             return 0
         return 1 + self._contar_nao_folhas(raiz.esquerda) + self._contar_nao_folhas(raiz.direita)
-
+    
 class NoGenerico:
     def __init__(self, chave):
         self.chave = chave
@@ -93,6 +93,9 @@ class ArvoreGenerica:
         self.raiz = None
 
     def inserir(self, chave, chave_pai=None):
+        if self.buscar(self.raiz, chave) is not None:
+            messagebox.showerror("Erro", "Valor já existe na árvore.")
+
         novo_no = NoGenerico(chave)
         
         if self.raiz is None:
@@ -218,6 +221,7 @@ class Interface:
             if self.tipo_arvore.get() == "binaria":
                 no_encontrado = self.arvore_binaria.buscar(valor)
                 if no_encontrado:
+                    messagebox.showinfo("Resultado da pesquisa", "Valor encontrado na árvore.")
                     self.desenhar_arvore_destacado(no_encontrado.chave)
                 else:
                     messagebox.showinfo("Resultado da pesquisa", "Valor não encontrado na árvore.")
@@ -225,6 +229,7 @@ class Interface:
                 no_encontrado = self.arvore_generica.buscar(self.arvore_generica.raiz, valor)
                 if no_encontrado:
                     messagebox.showinfo("Resultado da pesquisa", "Valor encontrado na árvore.")
+                    self.desenhar_arvore_destacado(no_encontrado.chave)
                 else:
                     messagebox.showinfo("Resultado da pesquisa", "Valor não encontrado na árvore.")
         except ValueError:
