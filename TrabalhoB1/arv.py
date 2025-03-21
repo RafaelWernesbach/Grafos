@@ -2,7 +2,7 @@ import tkinter as tk
 from tkinter import messagebox
 import networkx as nx
 import matplotlib.pyplot as plt
-
+    
 class No:
     def __init__(self, chave):
         self.chave = chave
@@ -95,6 +95,7 @@ class ArvoreGenerica:
     def inserir(self, chave, chave_pai=None):
         if self.buscar(self.raiz, chave) is not None:
             messagebox.showerror("Erro", "Valor já existe na árvore.")
+            return
 
         novo_no = NoGenerico(chave)
         
